@@ -99,7 +99,6 @@ clear_loop:
   DEX
   BNE clear_loop
 
-
 .endproc
 
 ; Main program logic
