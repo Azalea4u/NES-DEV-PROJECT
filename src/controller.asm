@@ -179,7 +179,7 @@ remaining_loop:
   LDA #14
   STA SPRITE_2_ADDR + SPRITE_OFFSET_TILE
 
-  LDA #$20
+  LDA #20
   STA player_y
 
   STA SPRITE_0_ADDR + SPRITE_OFFSET_Y
@@ -187,11 +187,10 @@ remaining_loop:
 
   CLC
   ADC #8
-  STA SPRITE_2_ADDR + SPRITE_OFFSET_X
+  STA SPRITE_2_ADDR + SPRITE_OFFSET_Y
 
 
-
-  LDA #$30
+  LDA #30
   STA player_x
 
   STA SPRITE_0_ADDR + SPRITE_OFFSET_X
@@ -217,12 +216,22 @@ remaining_loop:
 
 .proc update_sprites
   ; Update OAM values
+      ; X Positions
   LDA player_x
   STA SPRITE_0_ADDR + SPRITE_OFFSET_X
 
   CLC
   ADC #8
   STA SPRITE_1_ADDR + SPRITE_OFFSET_X
+
+      ; Y Positions
+  LDA player_y
+  STA SPRITE_0_ADDR + SPRITE_OFFSET_Y
+  STA SPRITE_1_ADDR + SPRITE_OFFSET_Y
+
+  CLC
+  ADC #8
+  ;STA SPRITE_2_ADDR + SPRITE_OFFSET_Y
 
   ; Set OAM address to 0 — required before DMA or manual OAM writes
   LDA #$00
@@ -234,10 +243,10 @@ remaining_loop:
   STA SPRITE_DMA            ; $4014 — triggers OAM DMA (513–514 cycles, CPU stalled)
 
   RTS
-
 .endproc
 
 .proc update_player
+    ; --- LEFT --- ;
     LDA controller_1
     AND #PAD_L
     BEQ not_left
@@ -245,12 +254,34 @@ remaining_loop:
       DEX
       STX player_x
 
-not_left:
+  not_left:
+    ; --- RIGHT --- ;
+    LDA controller_1
     AND #PAD_R
     BEQ not_right
-      ;;
-    not_right:
+      LDX player_x
+      INX
+      STX player_x
 
+  not_right:
+    ; --- UP --- ;
+    LDA controller_1
+    AND #PAD_U
+    BEQ not_up
+      LDX player_y
+      DEX
+      STX player_y
+
+  not_up:
+    ; --- DOWN --- ;
+    LDA controller_1
+    AND #PAD_D
+    BEQ not_down
+      LDX player_y
+      INX
+      STX player_y
+
+  not_down:
 
       RTS                       ; Return to caller
 .endproc

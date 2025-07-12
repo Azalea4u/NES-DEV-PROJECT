@@ -204,9 +204,9 @@ remaining_loop:
 ;******************************************************************************
 .proc update_sprites
     ; Update OAM values
-    LDX oam + 3
+    LDX oam
     INX
-    STX oam + 3
+    STX oam
 
     ; Set OAM address to 0 — required before DMA or manual OAM writes
     LDA #$00
