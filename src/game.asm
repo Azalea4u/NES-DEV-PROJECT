@@ -203,15 +203,14 @@ remaining_loop:
  	STA PPU_ADDRESS
 
   ; print text
- 	; draw some text on the screen
-  LDX #0
+  ; draw some text on the screen
+  LDX #0            ; set index X to 0
 textloop:
-  LDA hello_txt, x
-  STA PPU_VRAM_IO
-  INX
-  CMP #0
-  BEQ :+
-  JMP textloop
+  LDA hello_txt, X  ; load character into A from memory (hello_text + X)
+  STA PPU_VRAM_IO   ; set character into PPU
+  INX               ; increment index X
+  CMP #0            ; check A for 0 (null terminator)
+  BNE textloop
 :
 
   ; Reset scroll registers to 0,0 (needed after VRAM access)
@@ -305,6 +304,8 @@ textloop:
   ;LDA scroll
   LDA #$00
   STA PPU_SCROLL                         ; Write horizontal scroll
+  DEC scroll
+  LDA scroll
   STA PPU_SCROLL                         ; Write vertical scroll
 
   ; Set OAM address to 0 — required before DMA or manual OAM writes
@@ -315,6 +316,42 @@ textloop:
   ; Write the high byte of the source address (e.g., $02 for $0200)
   LDA #>oam
   STA SPRITE_DMA            ; $4014 — triggers OAM DMA (513–514 cycles, CPU stalled)
+
+  ; -- check X collision --
+    LDA ball_x
+    CLC
+    ADC #8         ; ball_x + 8
+    CMP player_x
+    BCC no_collision      ; ball is left of player
+
+    LDA player_x
+    CLC
+    ADC #16        ; player_x + 16
+    CMP ball_x
+    BCC no_collision      ; ball is right of player
+
+; -- check Y collision --
+    LDA ball_y
+    CLC
+    ADC #8         ; ball_y + 8
+    CMP player_y
+    BCC no_collision      ; ball is above player
+
+    LDA player_y
+    CLC
+    ADC #16        ; player_y + 16
+    CMP ball_y
+    BCC no_collision      ; ball is below player
+
+; if collision is detected
+    LDA ball_dy
+    EOR #$FF       ; Flip direction
+    CLC
+    ADC #1
+    STA ball_dy
+
+no_collision:
+
 
   RTS
 
